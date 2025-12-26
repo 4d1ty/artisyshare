@@ -1,0 +1,4 @@
+_secrets.php
+/uploads/
+/uploads/thumbs/
+!/uploads/.htaccess

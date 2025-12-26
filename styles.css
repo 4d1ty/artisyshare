@@ -1,0 +1,49 @@
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.art-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.art-meta {
+    font-size: 0.9em;
+}
+
+.nsfw {
+    color: red;
+    font-weight: bold;
+    margin-left: 0.5em;
+}
+
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+
+.art-card img {
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.art-card img:hover {
+    transform: scale(1.05);
+}
+
+.art-meta {
+    padding: 8px 0;
+}
+
+.art-meta small {
+    display: block;
+    margin-top: 4px;
+    color: #666;
+}
