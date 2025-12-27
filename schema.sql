@@ -1,3 +1,4 @@
+-- database: :memory:
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -45,6 +46,24 @@ ADD thumbnail_path VARCHAR(255) NOT NULL;
 ALTER TABLE artworks
 ADD description TEXT NULL;
 
+CREATE TABLE artwork_likes (
+    artwork_id INT NOT NULL,
+    user_id INT NOT NULL,
+
+    PRIMARY KEY (artwork_id, user_id),
+
+    FOREIGN KEY (artwork_id) REFERENCES artworks(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX idx_artwork_likes_artwork ON artwork_likes(artwork_id);
+
+CREATE INDEX idx_artwork_likes_user ON artwork_likes(user_id);
+
+ALTER TABLE artworks
+ADD view_count INT DEFAULT 0;
 
 CREATE INDEX idx_artworks_status ON artworks(status);
 CREATE INDEX idx_artworks_created ON artworks(created_at);

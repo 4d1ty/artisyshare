@@ -1,5 +1,5 @@
 <?php
-$site_name = "TBA";
+$site_name = "ArtisyShare";
 
 $user = $user ?? null;
 
@@ -25,6 +25,12 @@ $all_tags = array_values($all_tags);
 
 
 ?>
+<div class="flex">
+    <?php foreach ($all_tags as $tag): ?>
+        <a href="index.php?tag=<?= urlencode($tag) ?>" class="tag-link"><?= htmlspecialchars($tag) ?></a>
+    <?php endforeach; ?>
+</div>
+
 <nav>
     <h2><?= $site_name ?></h2>
     <ul>
@@ -39,14 +45,13 @@ $all_tags = array_values($all_tags);
         <?php endif; ?>
     </ul>
 </nav>
-<?php foreach ($all_tags as $tag): ?>
-    <a href="index.php?tag=<?= urlencode($tag) ?>" class="tag-link"><?= htmlspecialchars($tag) ?></a>
-<?php endforeach; ?>
 
 <?php if ($flash_messages): ?>
+    <br>
     <div class="flash-messages">
         <?php foreach ($flash_messages as $message): ?>
             <div class="flash-message"><?= htmlspecialchars($message) ?></div>
         <?php endforeach; ?>
     </div>
+    <br>
 <?php endif; ?>

@@ -7,7 +7,7 @@ $query = trim($_GET['q'] ?? '');
 $tag = trim($_GET['tag'] ?? '');
 $tags_filter = $_GET['tags'] ?? [];
 // $tags_filter = array_filter(array_map('trim', $tags_filter));
-if($tag !== '') {
+if ($tag !== '') {
     $tags_filter[] = $tag;
 }
 
@@ -63,23 +63,38 @@ include __DIR__ . "/templates/navbar.php";
 
 <form id="filter-form" action="index.php" method="get">
     <input type="text" name="q" placeholder="Search..." value="<?= htmlspecialchars($_GET['q'] ?? "", ENT_QUOTES) ?>">
-
-    <div class="tags-filter">
+    <select name="sort" id="sort-select">
+        <option value="newest" <?=
+                                (isset($_GET['sort']) && $_GET['sort'] === 'newest') || !isset($_GET['sort']) ? 'selected' : '' ?>>Newest</option>
+        <option value="oldest"
+            <?= (isset($_GET['sort']) && $_GET['sort'] === 'oldest') ? 'selected' : '' ?>>Oldest</option>
+    </select>
+    <button type="button" id="tag-filter-toggle">Tags ▼</button>
+    <div class="tags-filter" style="margin: 10px 0; display: none; flex-wrap: wrap; gap: 10px;">
         <?php foreach ($all_tags as $tag): ?>
             <label>
                 <input type="checkbox" name="tags[]" value="<?= htmlspecialchars($tag, ENT_QUOTES) ?>"
+                class="tag-checkbox"
                     <?= ((isset($_GET['tag']) && $_GET['tag'] == $tag) || (isset($_GET['tags']) && in_array($tag, $_GET['tags']))) ? 'checked' : '' ?>>
                 <?= htmlspecialchars($tag, ENT_QUOTES) ?>
             </label>
         <?php endforeach; ?>
     </div>
-    <select name="sort">
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-    </select>
 
-    <button type="submit">Search</button>
+
+    <button type="submit" style="margin-top: 5px;">Search</button>
 </form>
+
+<script>
+    document.getElementById('tag-filter-toggle').addEventListener('click', function() {
+        var filterDiv = document.querySelector('.tags-filter');
+        if (filterDiv.style.display === 'none' || filterDiv.style.display === '') {
+            filterDiv.style.display = 'flex';
+        } else {
+            filterDiv.style.display = 'none';
+        }
+    });
+</script>
 
 <?php if (empty($artworks)): ?>
     <p>No artworks yet. Be the first to upload!</p>
@@ -89,13 +104,15 @@ include __DIR__ . "/templates/navbar.php";
             <div class="art-card">
                 <a href="artwork.php?id=<?= $art['id'] ?>">
                     <img
-                        src="/<?= htmlspecialchars($art['thumbnail_path']) ?>"
+                        src="<?= htmlspecialchars($art['thumbnail_path']) ?>"
                         alt="<?= htmlspecialchars($art['title']) ?>"
+                        decoding="async"
                         loading="lazy">
                 </a>
 
                 <div class="art-meta">
                     <strong><?= htmlspecialchars($art['title']) ?></strong><br>
+                    <small>Views: <?= htmlspecialchars($art['view_count']) ?></small>
                     by
                     <a href="profile.php?u=<?= urlencode($art['username']) ?>">
                         <?= htmlspecialchars($art['username']) ?>
@@ -104,5 +121,25 @@ include __DIR__ . "/templates/navbar.php";
             </div>
         <?php endforeach; ?>
     </div>
+    <script src="masonry.pkgd.min.js"></script>
+    <script src="imagesloaded.pkgd.min.js"></script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var grid = document.querySelector('.gallery');
+
+            imagesLoaded(grid, function() {
+                var msnry = new Masonry(grid, {
+                    itemSelector: '.art-card',
+                    columnWidth: '.art-card',
+                    gutter: 10,
+                    fitWidth: true,
+                    originLeft: true
+                });
+            });
+        });
+    </script>
+
 <?php endif; ?>
 <?php include __DIR__ . "/templates/footer.php"; ?>

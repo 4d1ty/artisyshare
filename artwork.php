@@ -26,12 +26,17 @@ if (!$artwork) {
 }
 
 /* Access control */
-if (
-    $artwork['status'] !== 'approved'
-    && (!$user || $user['id'] !== $artwork['user_id'])
-) {
-    http_response_code(403);
-    die("This artwork is not public.");
+/* 
+    Either the artwork is approved (public)
+    Or the user is the owner of the artwork
+    Or the user is a moderator or admin
+*/
+if ($artwork['status'] !== 'approved') {
+    if (!$user || ($user['id'] !== $artwork['user_id'] && $user['role'] !== 'moderator' && $user['role'] !== 'admin')) {
+        http_response_code(403);
+        die("Access denied.");
+        die("This artwork is not public.");
+    }
 }
 
 /* Fetch tags */
@@ -47,6 +52,18 @@ $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 $title = htmlspecialchars($artwork['title']);
 
+
+// Increment view count, but only for approved artworks
+if ($artwork['status'] === 'approved') {
+
+    $stmt = $pdo->prepare("
+    UPDATE artworks
+    SET view_count = view_count + 1
+    WHERE id = ?");
+    $stmt->execute([$artwork_id]);
+}
+
+
 include __DIR__ . "/templates/header.php";
 include __DIR__ . "/templates/navbar.php";
 ?>
@@ -61,7 +78,56 @@ include __DIR__ . "/templates/navbar.php";
 </p>
 
 <p>
+    <!-- Form for mods and admin -->
+    <?php if ($user && ($user['role'] === 'moderator' || $user['role'] === 'admin')): ?>
+<form action="art_status.php" method="post" style="display:inline;">
+    <?= csrf_tag() ?>
+    <input type="hidden" name="artwork_id" value="<?= htmlspecialchars($artwork['id']) ?>">
+    <input type="hidden" name="next" value="artwork.php?id=<?= urlencode($artwork['id']) ?>">
+    <label for="status">Status</label>
+    <select name="new_status" id="status">
+        <option value="approved" <?= $artwork['status'] === 'approved' ? 'selected' : '' ?>>Approve</option>
+        <option value="rejected" <?= $artwork['status'] === 'rejected' ? 'selected' : '' ?>>Reject</option>
+        <option value="pending" <?= $artwork['status'] === 'pending' ? 'selected' : '' ?>>Pending</option>
+    </select>
+    <div style="display: none;">
+        <label for="rejection_reason">Rejection Reason</label>
+        <input id="rejection_reason" type="text" name="rejection_reason" value="<?= htmlspecialchars($artwork['rejection_reason'] ?? '') ?>" style="width: 300px;"
+            <?= $artwork['status'] === 'rejected' ? 'required' : '' ?>>
+    </div>
+    <button type="submit">
+        Update
+    </button>
+</form>
+<script>
+    // Show/hide rejection reason based on status
+    const statusSelect = document.querySelector('select[name="new_status"]');
+    const rejectionReasonInput = document.querySelector('input[name="rejection_reason"]');
+    const rejectionReasonInputDiv = rejectionReasonInput.parentElement;
+
+    function toggleRejectionReason() {
+        if (statusSelect.value === 'rejected') {
+            rejectionReasonInputDiv.style.display = 'block';
+            rejectionReasonInput.required = true;
+
+        } else {
+            rejectionReasonInputDiv.style.display = 'none';
+            rejectionReasonInput.required = false;
+        }
+    }
+
+    statusSelect.addEventListener('change', toggleRejectionReason);
+    // Initial call
+    toggleRejectionReason();
+</script>
+<?php else: ?>
     Status: <?= htmlspecialchars(ucfirst($artwork['status'])) ?>
+<?php endif; ?>
+
+</p>
+
+<p>
+    Views: <?= htmlspecialchars($artwork['view_count']) ?>
 </p>
 
 <?php if (in_array("nsfw", $tags)): ?>
@@ -71,8 +137,7 @@ include __DIR__ . "/templates/navbar.php";
 <img
     src="<?= htmlspecialchars($artwork['image_path']) ?>"
     alt="<?= htmlspecialchars($artwork['title']) ?>"
-    style="max-width: 100%; height: auto;"
->
+    style="max-width: 100%; height: auto;">
 
 <?php if (!empty($artwork['description'])): ?>
     <p><?= nl2br(htmlspecialchars($artwork['description'])) ?></p>
@@ -96,7 +161,7 @@ include __DIR__ . "/templates/navbar.php";
 <?php if ($artwork['status'] === 'rejected'): ?>
     <div class="rejection">
         <strong>Rejected:</strong>
-        <?= htmlspecialchars($artwork['rejection_reason']) ?>
+        <?= htmlspecialchars($artwork['rejection_reason'] ?? "") ?>
     </div>
 <?php endif; ?>
 

@@ -162,14 +162,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         value="<?= htmlspecialchars($_POST['title'] ?? '', ENT_QUOTES) ?>"
         required>
     <br><br>
-    <label for="description">Description</label><br>
+    <label for="description">Description (Optional)</label><br>
     <textarea name="description" rows="4" cols="50" id="description"><?= htmlspecialchars($_POST['description'] ?? '', ENT_QUOTES) ?></textarea>
     <br>
     <br>
-    <label for="tags">Tags (comma separated)</label>
+    <label for="tags">Tags (comma separated), (Max 30 Tags, no space and special characters)</label>
+    <br>
     <input type="text" name="tags" id="tags"
         value="<?= htmlspecialchars($_POST['tags'] ?? '', ENT_QUOTES) ?>">
     <br>
+    <div class="tag-suggestions" id="tag-suggestions" style="display: none;"></div>
     <br>
     <label for="noexif">Strip EXIF Data</label>
     <input type="checkbox" name="noexif" id="noexif" <?= isset($_POST['noexif']) ? 'checked' : '' ?>>
@@ -188,4 +190,70 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <?= csrf_tag() ?>
     <button type="submit">Upload</button>
 </form>
+
+<script>
+    const tagsInput = document.getElementById('tags');
+    const tagSuggestions = document.getElementById('tag-suggestions');
+
+    tagsInput.addEventListener('input', function() {
+        const input = this.value;
+        const parts = input.split(',');
+        const currentTag = parts[parts.length - 1].trim();
+
+        if (!currentTag) {
+            tagSuggestions.style.display = 'none';
+            tagSuggestions.innerHTML = '';
+            return;
+        }
+
+        fetch(`suggest_tag.php?q=${encodeURIComponent(currentTag)}`)
+            .then(res => res.json())
+            .then(suggestions => {
+                tagSuggestions.innerHTML = '';
+                if (suggestions.length === 0) {
+                    tagSuggestions.style.display = 'none';
+                    return;
+                }
+                tagSuggestions.style.display = 'block';
+                suggestions.forEach(tag => {
+                    const div = document.createElement('div');
+                    div.textContent = tag;
+                    div.className = 'tag-suggestion-item';
+                    div.style.cursor = 'pointer';
+                    div.style.padding = '5px';
+                    div.style.borderBottom = '1px solid #ccc';
+                    tagSuggestions.style.display = 'block';
+
+                    div.addEventListener('click', () => {
+                        const existingTags = parts
+                            .slice(0, -1)
+                            .map(t => t.trim())
+                            .filter(Boolean);
+
+                        // Prevent duplicates
+                        if (existingTags.map(t => t.toLowerCase()).includes(tag.toLowerCase())) {
+                            tagSuggestions.innerHTML = '';
+                            return;
+                        }
+
+                        existingTags.push(tag);
+
+                        tagsInput.value = existingTags.join(', ') + ', ';
+                        tagSuggestions.innerHTML = '';
+                    });
+
+                    tagSuggestions.appendChild(div);
+                });
+            });
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', e => {
+        if (!tagSuggestions.contains(e.target) && e.target !== tagsInput) {
+            tagSuggestions.innerHTML = '';
+            tagSuggestions.style.display = 'none';
+        }
+    });
+</script>
+
 <?php include __DIR__ . "/templates/footer.php"; ?>
