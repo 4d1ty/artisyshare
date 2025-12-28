@@ -3,7 +3,7 @@ require_once __DIR__ . "/init.php";
 require_once __DIR__ . "/utils/image.php";
 
 
-$title = "Upload";
+$title = "Upload - ArtisyShare";
 
 include __DIR__ . "/templates/header.php";
 include_once __DIR__ . "/templates/navbar.php";
@@ -17,6 +17,8 @@ if (!$user) {
 
 
 $errors = [];
+$max_file_size = 10 * 1024 * 1024; // 10 MB
+$max_resolution = 3000; // 3000 pixels
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
     if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
@@ -63,12 +65,25 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $errors[] = "You can only add up to 30 tags.";
     }
 
+    if($_FILES['image']['size'] > $max_file_size) {
+        $errors[] = "File size exceeds the maximum limit of 10 MB.";
+    }
+
+    if($_FILES['image']['size'] == 0) {
+        $errors[] = "File size is zero bytes.";
+    }
+    
+
     if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
         $errors[] = "Image upload failed.";
     } else {
         $tmpPath = $_FILES['image']['tmp_name'];
         if (!is_valid_image($tmpPath)) {
             $errors[] = "Uploaded file is not a valid image.";
+        }
+        $resolution = get_image_resolution($tmpPath);
+        if ($resolution['width'] > $max_resolution || $resolution['height'] > $max_resolution) {
+            $errors[] = "Image resolution exceeds the maximum limit of {$max_resolution}x{$max_resolution} pixels.";
         }
     }
 

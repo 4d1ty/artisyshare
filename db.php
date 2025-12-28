@@ -10,3 +10,7 @@ $options = [
 ];
 
 $pdo = new PDO($dsn, $user, $pass, $options);
+
+if (!$pdo) {
+    die("Database connection failed.");
+}

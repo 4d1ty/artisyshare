@@ -35,13 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         if (!$user || password_verify(password_hash($password, PASSWORD_DEFAULT), $user['password_hash'])) {
             $errors[] = "Invalid Username or Password";
         }
-        
-        if($user['is_banned']){
+
+        if ($user['is_banned']) {
             $errors[] = "Your account has been banned, please contact the admin for more info, " . $user['is_banned'];
         }
     }
 
-    if(empty($errors)){
+    if (empty($errors)) {
         $_SESSION['user_id'] = $user['id'];
         $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
         $stmt->execute([$user['id']]);
@@ -70,13 +70,19 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <input type="text" name="username" id="username"
         placeholder="Username"
         required
+        autocomplete="username"
         value="<?= htmlspecialchars($_POST["username"] ?? "", ENT_QUOTES, 'UTF-8') ?>">
+    <br>
+    <br>
     <label for="password">Password</label>
     <input type="password"
+        autocomplete="current-password"
         placeholder="Password"
         name="password" id="password">
     <input type="hidden" name="next" value="<?= htmlspecialchars($_GET['next'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <?= csrf_tag() ?>
+    <br>
+    <br>
 
     <button type="submit">Login</button>
 </form>

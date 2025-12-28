@@ -117,3 +117,15 @@ function strip_exif_data(string $sourcePath, string $destPath): bool
 
     return $result;
 }
+
+
+function get_image_resolution(string $filePath): array|false
+{
+    $info = getimagesize($filePath);
+    if (!$info) {
+        return false;
+    }
+
+    [$width, $height] = $info;
+    return ['width' => $width, 'height' => $height];
+}
