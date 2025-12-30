@@ -37,6 +37,30 @@ $artworks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("SELECT * FROM tags ORDER BY name ASC");
 $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Artwork and comments reporting
+
+$stmt = $pdo->query("
+    SELECT r.*, u.username AS reported_by_username, a.title AS artwork_title
+    FROM artwork_reports r
+    JOIN users u ON r.reporter_id = u.id
+    JOIN artworks a ON r.artwork_id = a.id
+    ORDER BY r.created_at DESC
+");
+$artwork_reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->query("
+    SELECT r.*, u.username AS reported_by_username, c.content AS comment_content
+    FROM comment_reports r
+    JOIN users u ON r.reporter_id = u.id
+    JOIN comments c ON r.comment_id = c.id
+    ORDER BY r.created_at DESC
+");
+
+$comment_reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+
 ?>
 
 <h1>Moderator Panel</h1>
@@ -122,6 +146,75 @@ $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </tr>
     <?php endforeach; ?>
 </table>
+
+
+<h2>Reported Artworks</h2>
+<?php if (empty($artwork_reports)): ?>
+    <p>No reported artworks.</p>
+<?php else: ?>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Report ID</th>
+            <th>Artwork ID</th>
+            <th>Artwork Title</th>
+            <th>Reported By</th>
+            <th>Reason</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
+        <?php foreach ($artwork_reports as $report): ?>
+            <tr>
+                <td><?= htmlspecialchars($report['id']) ?></td>
+                <td><a href="artwork.php?id=<?= urlencode($report['artwork_id']) ?>"><?= htmlspecialchars($report['artwork_id']) ?></a></td>
+                <td><?= htmlspecialchars($report['artwork_title']) ?></td>
+                <td><?= htmlspecialchars($report['reported_by_username']) ?></td>
+                <td><?= nl2br(htmlspecialchars($report['reason'])) ?></td>
+                <td><?= htmlspecialchars($report['created_at']) ?></td>
+                <td>
+                    <form method="post" action="resolve_report.php" style="display:inline;">
+                        <?= csrf_tag() ?>
+                        <input type="hidden" name="report_id" value="<?= htmlspecialchars($report['id']) ?>">
+                        <button type="submit" onclick="return confirm('Mark this report as resolved?');">Resolve</button>
+                    </form>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+
+<?php endif; ?>
+<h2>Reported Comments</h2>
+<?php if (empty($comment_reports)): ?>
+    <p>No reported comments.</p>
+<?php else: ?>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Report ID</th>
+            <th>Comment ID</th>
+            <th>Comment Content</th>
+            <th>Reported By</th>
+            <th>Reason</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
+        <?php foreach ($comment_reports as $report): ?>
+            <tr>
+                <td><?= htmlspecialchars($report['id']) ?></td>
+                <td><?= htmlspecialchars($report['comment_id']) ?></td>
+                <td><?= nl2br(htmlspecialchars($report['comment_content'])) ?></td>
+                <td><?= htmlspecialchars($report['reported_by_username']) ?></td>
+                <td><?= nl2br(htmlspecialchars($report['reason'])) ?></td>
+                <td><?= htmlspecialchars($report['created_at']) ?></td>
+                <td>
+                    <form method="post" action="resolve_comment_report.php" style="display:inline;">
+                        <?= csrf_tag() ?>
+                        <input type="hidden" name="report_id" value="<?= htmlspecialchars($report['id']) ?>">
+                        <button type="submit" onclick="return confirm('Mark this comment report as resolved?');">Resolve</button>
+                    </form>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+<?php endif; ?>
 
 <script>
     document.querySelectorAll('select[name="new_status"]').forEach(function(select) {

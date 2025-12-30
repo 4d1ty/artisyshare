@@ -78,6 +78,11 @@ include __DIR__ . "/templates/navbar.php";
         <?= htmlspecialchars($artwork['username']) ?>
     </a>
 </p>
+<!-- report -->
+
+<p>
+    <a href="report_artwork.php?artwork_id=<?= urlencode($artwork['id']) ?>">Report Artwork</a>
+</p>
 
 <?php if ($user && $user['id'] === $artwork['user_id']): ?>
     <p>

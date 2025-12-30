@@ -23,6 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if(strlen($comment_text) > 1000) {
+        $_SESSION['flash_messages'][] = "Comment is too long. Maximum length is 1000 characters.";
+        header("Location: artwork.php?id=" . $artwork_id);
+        exit;
+    }
+
     if ($parent_comment_id > 0) {
         // Verify that the parent comment exists
         $stmt = $pdo->prepare("SELECT id FROM comments WHERE id = ? AND artwork_id = ?");

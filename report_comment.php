@@ -36,6 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // check if user has already reported this comment
+    $stmt = $pdo->prepare("SELECT id FROM comment_reports WHERE comment_id = ? AND reporter_id = ?");
+    $stmt->execute([$comment_id, $user['id']]);
+    $existing_report = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($existing_report) {
+        $_SESSION['flash_messages'][] = "You have already reported this comment.";
+        header("Location: artwork.php?id=" . $comment['artwork_id']);
+        exit;
+    }
+
     // Insert report into database
     $stmt = $pdo->prepare("INSERT INTO comment_reports (comment_id, reporter_id, reason) VALUES (?, ?, ?)");
     $stmt->execute([$comment_id, $user['id'], $reason]);
