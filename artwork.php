@@ -22,6 +22,8 @@ $artwork = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$artwork) {
     http_response_code(404);
+    // redirect to index.php after displaying message in 5 seconds with header
+    header("Refresh: 5; url=index.php");
     die("Artwork not found.");
 }
 
@@ -50,7 +52,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$artwork_id]);
 $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-$title = htmlspecialchars($artwork['title']);
+$title = htmlspecialchars($artwork['title']) . " - Artwork by " . htmlspecialchars($artwork['username']) . " - ArtisyShare";
 
 
 // Increment view count, but only for approved artworks
@@ -76,6 +78,17 @@ include __DIR__ . "/templates/navbar.php";
         <?= htmlspecialchars($artwork['username']) ?>
     </a>
 </p>
+
+<?php if ($user && $user['id'] === $artwork['user_id']): ?>
+    <p>
+        <a href="edit_artwork.php?id=<?= urlencode($artwork['id']) ?>">Edit Artwork</a>
+    </p>
+    <form action="delete_artwork.php" method="post" onsubmit="return confirm('Are you sure you want to delete this artwork? This action cannot be undone.');">
+        <?= csrf_tag() ?>
+        <input type="hidden" name="artwork_id" value="<?= htmlspecialchars($artwork['id']) ?>">
+        <button type="submit">Delete Artwork</button>
+    </form>
+<?php endif; ?>
 
 <p>
     <!-- Form for mods and admin -->
@@ -164,5 +177,8 @@ include __DIR__ . "/templates/navbar.php";
         <?= htmlspecialchars($artwork['rejection_reason'] ?? "") ?>
     </div>
 <?php endif; ?>
+
+<!-- Comments -->
+<?php include __DIR__ . "/templates/comments.php"; ?>
 
 <?php include __DIR__ . "/templates/footer.php"; ?>

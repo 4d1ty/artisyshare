@@ -22,15 +22,17 @@ $all_tags =  $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 ?>
+
 <div class="flex">
+
     <?php foreach ($all_tags as $tag): ?>
         <a href="index.php?tag=<?= urlencode($tag['name']) ?>" class="tag-link">
             <?= htmlspecialchars($tag['name']) ?>
             <span class="tag-count">(<?= (int) $tag['artwork_count'] ?>)</span>
         </a>
     <?php endforeach; ?>
+    
 </div>
-
 
 <nav>
     <h2><?= $site_name ?></h2>
@@ -46,6 +48,7 @@ $all_tags =  $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
     </ul>
 </nav>
+
 
 <?php if ($flash_messages): ?>
     <br>

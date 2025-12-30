@@ -75,7 +75,14 @@ if ($sort === 'oldest') {
     $sql .= " ORDER BY a.created_at DESC";
 }
 
-echo "<!-- SQL Query: " . htmlspecialchars($sql) . " -->";
+
+$page = max(1, (int)($_GET['page'] ?? 1));
+$limit = 20;
+$offset = ($page - 1) * $limit;
+
+$sql .= " LIMIT $limit OFFSET $offset";
+
+
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -102,12 +109,14 @@ $title .= " - ArtisyShare";
 
 include __DIR__ . "/templates/header.php";
 include __DIR__ . "/templates/navbar.php";
-
+if ($_SESSION['show_announcement'])
+    include __DIR__ . "/templates/announcement_panel.php";
 
 ?>
-
+<a href="toggle_announcement.php">
+    <?= $_SESSION['show_announcement'] ? 'Hide' : 'Show' ?> Announcements
+</a>
 <h3>Welcome <?= htmlspecialchars($user['username'] ?? "Guest") ?></h3>
-
 <form id="filter-form" action="index.php" method="get">
     <input type="text" name="q" placeholder="Search..." value="<?= htmlspecialchars($_GET['q'] ?? $query ?? "", ENT_QUOTES) ?>">
     <select name="sort" id="sort-select">
@@ -196,6 +205,18 @@ include __DIR__ . "/templates/navbar.php";
             });
         });
     </script>
-
 <?php endif; ?>
+<br>
+<!-- Pagination -->
+<div class="pagination">
+    <?php if ($page > 1): ?>
+        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">&laquo; Previous</a>
+    <?php endif; ?>
+    <span>Page <?= $page ?></span>
+    <?php if (count($artworks) === $limit): ?>
+        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">Next &raquo;</a>
+    <?php endif; ?>
+</div>
+
+
 <?php include __DIR__ . "/templates/footer.php"; ?>

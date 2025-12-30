@@ -15,9 +15,23 @@ if (!$user) {
 }
 
 
+// Last 24 hours upload count
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM artworks WHERE user_id = ? AND created_at >= NOW() - INTERVAL 1 DAY");
+$stmt->execute([$user['id']]);
+$upload_count_24h = (int) $stmt->fetchColumn();
+
+$per_day_upload_limit = $user['per_day_upload_limit'] ?? 10;
+$per_artwork_size_limit = $user['per_artwork_size_limit'] ?? (10 * 1024 * 1024); // 10 MB
+
+if ($upload_count_24h >= $per_day_upload_limit) {
+    $_SESSION['flash_messages'][] = "You have reached your daily upload limit of {$per_day_upload_limit} artworks. Please try again later.";
+    header("Location: index.php");
+    exit;
+}
+
 
 $errors = [];
-$max_file_size = 10 * 1024 * 1024; // 10 MB
+$max_file_size = $per_artwork_size_limit; // e.g., 10 MB
 $max_resolution = 3000; // 3000 pixels
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
@@ -205,6 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <?= csrf_tag() ?>
     <button type="submit">Upload</button>
 </form>
+<p>
+    Before posting, please make sure to read our <a href="rules.php">rules</a>
+</p>
 
 <script>
     const tagsInput = document.getElementById('tags');

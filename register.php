@@ -24,9 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($username == "") {
         $errors[] = "Username is required";
     }
-    if ($email === "") {
-        $errors[] = "Email is required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email address.";
     }
 
@@ -72,41 +70,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php endif; ?>
 
 <form action="register.php" method="post">
-    <label for="email">Email</label>
+    <label for="email">Email (Optional)</label>
     <input type="email"
         name="email"
         id="email"
         placeholder="Email"
-        required
         value="<?= htmlspecialchars($_POST["email"] ?? "", ENT_QUOTES, 'UTF-8') ?>">
-        <br>
-        <br>
-        <label for="username">Username</label>
-        <input type="text"
+    <br>
+    <br>
+    <label for="username">Username (Required)</label>
+    <input type="text"
         name="username"
         id="username"
         placeholder="Username"
         required
         value="<?= htmlspecialchars($_POST["username"] ?? "", ENT_QUOTES, 'UTF-8') ?>">
-        <br>
-        <br>
-        <label for="password">Password</label>
-        <input type="password"
+    <br>
+    <br>
+    <label for="password">Password</label>
+    <input type="password"
         name="password"
         id="password"
         placeholder="Password"
         required>
-        <br>
-        <br>
-        <label for="password2">Confirm Password</label>
-        <input type="password"
+    <br>
+    <br>
+    <label for="password2">Confirm Password</label>
+    <input type="password"
         placeholder="Confirm Password"
         name="password2"
         id="password2"
         required>
-        <?= csrf_tag() ?>
-        <br>
-        <br>
+    <?= csrf_tag() ?>
+    <br>
+    <br>
     <button type="submit">Register</button>
 </form>
+<p>
+    Before registering, please make sure to read our <a href="rules.php">rules</a>
+</p>
 <?php include __DIR__ . "/templates/footer.php"; ?>

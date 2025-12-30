@@ -50,6 +50,17 @@ if(!empty($search) || !empty($role_filter) || !empty($order)) {
 }
 
 
+// all announcements, with the username of the creator
+$stmt = $pdo->prepare("
+    SELECT a.*, u.username AS created_by
+    FROM announcements a
+    JOIN users u ON a.created_by = u.id
+    ORDER BY a.created_at DESC
+");
+$stmt->execute();
+$announcements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
 
 ?>
 
@@ -57,6 +68,28 @@ if(!empty($search) || !empty($role_filter) || !empty($order)) {
 <h1>Admin Panel</h1>
 <p>Welcome to the admin panel, <?= htmlspecialchars($user['username']) ?>.</p>
 <!-- Admin functionalities go here -->
+
+<!-- Post announcement -->
+<form action="post_announcement.php" method="POST">
+    <?= csrf_tag() ?>
+    <h2>Post Announcement</h2>
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title" required><br><br>
+    <label for="content">Content:</label><br>
+    <textarea id="content" name="content" rows="4" cols="50" required></textarea><br><br>
+    <!-- show until -->
+    <label for="show_until">Show Until (optional):</label><br>
+    <input type="datetime-local" id="show_until" name="show_until"><br><br>
+    <!-- post as, either current admin user or from the system user -->
+    <label for="post_as">Post As:</label><br>
+    <select id="post_as" name="post_as">
+        <option value="admin">Current Admin (<?= htmlspecialchars($user['username']) ?>)</option>
+        <option value="system">System</option>
+    </select><br><br>
+    
+    <button type="submit">Post Announcement</button>
+</form>
+
  <!-- Simple search -->
 <form action="admin.php" method="get">
     <input type="text" name="search" placeholder="Search users..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
@@ -106,6 +139,36 @@ if(!empty($search) || !empty($role_filter) || !empty($order)) {
             <?php else: ?>
                 N/A
             <?php endif; ?>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+
+<h2>Announcements</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Content</th>
+        <th>Posted By</th>
+        <th>Created At</th>
+        <th>Show Until</th>
+        <th>Action</th>
+    </tr>
+    <?php foreach ($announcements as $announcement): ?>
+    <tr>
+        <td><?= htmlspecialchars($announcement['id']) ?></td>
+        <td><?= htmlspecialchars($announcement['title']) ?></td>
+        <td><?= nl2br(htmlspecialchars($announcement['content'])) ?></td>
+        <td><?= htmlspecialchars($announcement['created_by']) ?></td>
+        <td><?= htmlspecialchars($announcement['created_at']) ?></td>
+        <td><?= htmlspecialchars($announcement['show_until'] ?? 'N/A') ?></td>
+        <td>
+            <form method="post" action="delete_announcement.php" style="display:inline;">
+                <?= csrf_tag() ?>
+                <input type="hidden" name="announcement_id" value="<?= htmlspecialchars($announcement['id']) ?>">
+                <button type="submit" onclick="return confirm('Are you sure you want to delete this announcement?');">Delete</button>
+            </form>
         </td>
     </tr>
     <?php endforeach; ?>
