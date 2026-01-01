@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $stmt = $pdo->prepare("SELECT id, username, is_banned, password_hash FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user || password_verify(password_hash($password, PASSWORD_DEFAULT), $user['password_hash'])) {
+        if (!$user || !password_verify($password, $user['password_hash'])) {
             $errors[] = "Invalid Username or Password";
         }
 
