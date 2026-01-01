@@ -32,13 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $stmt = $pdo->prepare("SELECT id, username, is_banned, password_hash FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            $errors[] = "Invalid Username or Password";
+        if (!$user || !password_verify($password, $user['password_hash']) || $user['is_banned']) {
+            $errors[] = "Invalid Username or Password or account is banned.";
         }
 
-        if ($user['is_banned']) {
-            $errors[] = "Your account has been banned, please contact the admin for more info, " . $user['is_banned'];
-        }
     }
 
     if (empty($errors)) {
