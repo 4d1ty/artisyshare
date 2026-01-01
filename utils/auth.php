@@ -8,5 +8,11 @@ $user = null;
 if (!is_null($user_id)) {
     $stmt = $pdo->prepare("SELECT id, username, role, per_day_upload_limit, per_artwork_size_limit FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
-    $user = $stmt->fetch();
+    $result = $stmt->fetch();
+    if($result) {
+        $user = $result;
+    } else {
+        // User not found, clear invalid user_id from session
+        unset($_SESSION['user_id']);
+    }
 }
